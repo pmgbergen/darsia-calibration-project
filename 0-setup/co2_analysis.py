@@ -57,21 +57,19 @@ calibration_image = darsia.imread(calibration_path, transformations=corrections)
 
 # ! ---- MAIN CONCENTRATION ANALYSIS AND CALIBRATION ---- !
 
+concentration_options = {
+    "base": baseline_image.img_as(float),
+    "restoration -> model": False,
+    "diff option": "plain",
+}
+
+restoration = darsia.TVD(
+    weight=0.025, eps=1e-4, max_num_iter=100, method="isotropic Bregman"
+)
+
 # Predefine concentration analysis for now without any model (to be defined later).
-co2_aq_analysis = darsia.ConcentrationAnalysis(
-    base=baseline_image.img_as(float),
-    restoration=darsia.TVD(
-        weight=0.025, eps=1e-4, max_num_iter=100, method="isotropic Bregman"
-    ),
-    **{"diff option": "plain"},
-)
-co2_g_analysis = darsia.ConcentrationAnalysis(
-    base=baseline_image.img_as(float),
-    restoration=darsia.TVD(
-        weight=0.025, eps=1e-4, max_num_iter=100, method="isotropic Bregman"
-    ),
-    **{"diff option": "plain"},
-)
+co2_aq_analysis = darsia.ConcentrationAnalysis(**concentration_options)
+co2_g_analysis = darsia.ConcentrationAnalysis(**concentration_options)
 
 # The goal is to define ome ROIs for which physical information is known.
 # One possibility is to use a GUI for interactive use. This option can
@@ -113,6 +111,8 @@ kernel_interpolation_co2_g = darsia.KernelInterpolation(
     darsia.GaussianKernel(gamma=9.73), colours_RGB, concentrations_co2_g
 )
 clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
+co2_aq_analysis.restoration = restoration
+co2_g_analysis.restoration = restoration
 co2_aq_analysis.model = darsia.CombinedModel([kernel_interpolation_co2_aq, clip])
 co2_g_analysis.model = darsia.CombinedModel([kernel_interpolation_co2_g, clip])
 
