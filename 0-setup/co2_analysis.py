@@ -8,12 +8,10 @@ This file is supposed to be a template for the BSc/DarSIA calibration project.
 
 # ! ---- IMPORTS ---- !
 
+import json
 from pathlib import Path
 
 import darsia
-import json
-
-import numpy as np
 import matplotlib.pyplot as plt
 import skimage
 
@@ -36,31 +34,26 @@ original_baseline = darsia.imread(baseline_path)
 
 # ! ---- CORRECTION MANAGEMENT ---- !
 
+# Idea: Apply three corrections:
+# 1. Drift correction aligning images by simple translation with respect to teh color checker.
+# 2. Color correction applying uniform colors in the color checker.
+# 3. Curvature correction to crop images to the right rectangular format.
+# The order has to be applied in later scripts as well.
+# The calibration data is stored in a json file, generated using setup_preprocessing.
+
 # Read config from json file
-f = open(Path("config/preprocessing.json"))
+f = open(Path("config/preprocessing_2023-10-17 22:18.json"))
 config = json.load(f)
 
-# First correction - drift correction: This image will be used as reference to
-# align other images through pure translation wrt some chosen ROI - e.g.
-# the color checker.
 drift_correction = darsia.DriftCorrection(original_baseline, **config["drift"])
-
-# Second correction - curvature correction: Crop image mainly. It is
-# based on the unmodifed baseline image. All images are assumed to be
-# aligned with that one.
-
-# Read the instructions of the assistant in the terminal
+color_correction = darsia.ColorCorrection(original_baseline, **config["color"])
 curvature_correction = darsia.CurvatureCorrection(config=config["curvature"])
+corrections = [drift_correction, color_correction, curvature_correction]
 
 # ! ---- PREPROCESSED IMAGES ---- !
 
-baseline_image = darsia.imread(
-    baseline_path, transformations=[drift_correction, curvature_correction]
-)
-
-calibration_image = darsia.imread(
-    calibration_path, transformations=[drift_correction, curvature_correction]
-)
+baseline_image = darsia.imread(baseline_path, transformations=corrections)
+calibration_image = darsia.imread(calibration_path, transformations=corrections)
 
 # ! ---- MAIN CONCENTRATION ANALYSIS AND CALIBRATION ---- !
 
@@ -85,18 +78,28 @@ co2_g_analysis = darsia.ConcentrationAnalysis(
 # be activated on demand. For testing purposes this example by default
 # uses a pre-defined sample selection.
 if True:
-    samples = [(slice(2150, 2250, None), slice(4841, 4941, None)), (slice(2459, 2559, None), slice(4075, 4175, None)), (slice(971, 1071, None), slice(4399, 4499, None))]
-    concentrations_co2_aq = [1., 0., 0.]
-    concentrations_co2_g = [0., 0., 1.]
+    samples = [
+        (slice(2150, 2250, None), slice(4841, 4941, None)),
+        (slice(2459, 2559, None), slice(4075, 4175, None)),
+        (slice(971, 1071, None), slice(4399, 4499, None)),
+    ]
+    concentrations_co2_aq = [1.0, 0.0, 0.0]
+    concentrations_co2_g = [0.0, 0.0, 1.0]
 else:
     # Same but under the use of a graphical user interface.
     # Ask user to provide characteristic regions with expected concentration values
     assistant = darsia.BoxSelectionAssistant(calibration_image)
     samples = assistant()
-    co2_aq_concentrations = [float(x) for x in input("Enter corresponding CO2(aq) concentration values\n").split(', ')] 
-    co2_g_concentrations = [float(x) for x in input("Enter corresponding CO2(g) concentration values\n").split(', ')] 
-    assert len(samples) == len(concentrations_co2_aq) 
-    assert len(samples) == len(concentrations_co2_g) 
+    co2_aq_concentrations = [
+        float(x)
+        for x in input("Enter corresponding CO2(aq) concentration values\n").split(", ")
+    ]
+    co2_g_concentrations = [
+        float(x)
+        for x in input("Enter corresponding CO2(g) concentration values\n").split(", ")
+    ]
+    assert len(samples) == len(concentrations_co2_aq)
+    assert len(samples) == len(concentrations_co2_g)
 
 # Now add kernel interpolation as model trained by the extracted information.
 smooth_RGB = co2_aq_analysis(calibration_image.img_as(float)).img
