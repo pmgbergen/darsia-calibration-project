@@ -57,6 +57,7 @@ config["drift"]["roi"] = config["drift"]["roi"].tolist()
 config["color"]["roi"] = config["color"]["roi"].tolist()
 
 # Store config to file and use current datetime as ID
-date = datetime.now().strftime("%Y-%m-%d %H:%M")
+date = datetime.now().strftime("%Y-%m-%d %H%M")
+Path("config").mkdir(exist_ok=True)
 with open(Path(f"config/preprocessing_{date}.json"), "w") as output:
     json.dump(config, output)
