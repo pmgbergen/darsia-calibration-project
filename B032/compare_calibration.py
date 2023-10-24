@@ -46,9 +46,9 @@ co2_aq_ingvild = np.load(Path("results_ingvild/concentration_co2_aq.npy"))
 co2_g_helene = np.load(Path("results_helene/concentration_co2_g.npy"))
 co2_aq_helene = np.load(Path("results_helene/concentration_co2_aq.npy"))
 
-¨# Difference of concentrations
+# Difference of concentrations
 co2_g_diff = co2_g_ingvild - co2_g_helene
-co2_aq_diff = co2_aq_ingvild - co2_aq_helene¨
+co2_aq_diff = co2_aq_ingvild - co2_aq_helene
 
 # Visual comparison
 fig = plt.figure()
