@@ -150,3 +150,8 @@ cb_co2_g = fig.colorbar(
     im_co2_g, orientation="vertical", label="concentration CO2(g) [%]"
 )
 plt.show()
+
+# Store solution to file
+Path("results_ingvild").mkdir(exist_ok=True)
+np.save(Path("results_ingvild/concentration_co2_g.npy", co2_g_concentration_image)
+np.save(Path("results_ingvild/concentration_co2_aq.npy", co2_aq_concentration_image)
