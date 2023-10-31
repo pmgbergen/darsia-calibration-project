@@ -97,7 +97,6 @@ time = []
 mass = []
 
 for path, i in enumerate(experiment_path):
-
     # Print info
     print(f"Analyze image {path} ({i} / {len(experiment_path)})")
 
@@ -133,7 +132,8 @@ for path, i in enumerate(experiment_path):
 # Plot CO2 mass evolution
 fig = plt.figure()
 fig.suptitle("CO2 mass evolution")
-plt.plot(time, mass)
+plt.plot(time, mass, color="grey")
+plt.plot(time, mass, "ro")
 plt.xlabel("time [s]")
 plt.ylabel("mass [kg]")
 
