@@ -11,6 +11,7 @@ from pathlib import Path
 
 import darsia
 import matplotlib.pyplot as plt
+import numpy as np
 import skimage
 
 # ! ---- DATA MANAGEMENT ---- !
@@ -131,22 +132,82 @@ co2_aq_analysis.model = darsia.CombinedModel([kernel_interpolation_co2_aq, clip]
 co2_g_analysis.model = darsia.CombinedModel([kernel_interpolation_co2_g, clip])
 
 # Finally, apply the (full) concentration analysis to analyze the test image
-co2_aq_concentration_image = co2_aq_analysis(calibration_image.img_as(float)).img
-co2_g_concentration_image = co2_g_analysis(calibration_image.img_as(float)).img
+co2_aq_concentration = co2_aq_analysis(calibration_image.img_as(float))
+co2_g_concentration = co2_g_analysis(calibration_image.img_as(float))
 
-# Visualize output
-fig = plt.figure()
-fig.suptitle("Original image and resulting concentrations")
-ax = plt.subplot(311)
-ax.imshow(skimage.img_as_ubyte(calibration_image.img))
-ax = plt.subplot(312)
-im_co2_aq = ax.imshow(co2_aq_concentration_image)
-cb_co2_aq = fig.colorbar(
-    im_co2_aq, orientation="vertical", label="concentration CO2(aq) [%]"
+# Store solution to file
+Path("results").mkdir(exist_ok=True)
+np.save(Path("results/concentration_co2_g.npy"), co2_g_concentration.img)
+np.save(Path("results/concentration_co2_aq.npy"), co2_aq_concentration.img)
+
+# ! ---- VIZUALIZATION
+
+
+def comparison_plot(co2_aq, co2_g, path, subregion=None):
+    # Extract subregion
+    if subregion is not None:
+        c_img = calibration_image.subregion(**subregion)
+        co2_aq_img = co2_aq.subregion(**subregion)
+        co2_g_img = co2_g.subregion(**subregion)
+    else:
+        c_img = calibration_image.copy()
+        co2_aq_img = co2_aq.copy()
+        co2_g_img = co2_g.copy()
+
+    # Detect physical domain
+    domain = co2_g_img.domain
+
+    # Visualize output
+    # USe figsize maximized window
+    fig = plt.figure(figsize=(37, 15))
+    fig.suptitle("Original image and resulting concentrations")
+    ax = plt.subplot(311)
+    ax.imshow(skimage.img_as_ubyte(c_img.img), extent=domain)
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax = plt.subplot(312)
+    im_aq = ax.imshow(co2_aq_img.img, extent=domain, vmin=0, vmax=100)
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
+    cb_aq = fig.colorbar(
+        im_aq,
+        cax=cbax,
+        orientation="vertical",
+        label="CO2(aq) [%]",
+    )
+    ax = plt.subplot(313)
+    im_g = ax.imshow(co2_g_img.img, extent=domain, vmin=0, vmax=100)
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
+    cb_g = fig.colorbar(
+        im_g,
+        cax=cbax,
+        orientation="vertical",
+        label="CO2(g) [%]",
+    )
+
+    # Allow to store plot to file
+    plt.savefig(path, dpi=800, transparent=False, bbox_inches="tight")
+    # And show on screen
+    plt.show()
+
+
+# Rescale images to 100%
+co2_aq_concentration.img *= 100
+co2_g_concentration.img *= 100
+
+# Compare full images
+comparison_plot(
+    co2_aq_concentration, co2_g_concentration, "results/calibration_co2.png"
 )
-ax = plt.subplot(313)
-im_co2_g = ax.imshow(co2_g_concentration_image)
-cb_co2_g = fig.colorbar(
-    im_co2_g, orientation="vertical", label="concentration CO2(g) [%]"
+
+# Zoom-in comparison
+subregion = {"coordinates": [[0.3, 0.3], [0.5, 0.6]]}
+comparison_plot(
+    co2_aq_concentration,
+    co2_g_concentration,
+    "results/calibration_co2_zoom.png",
+    subregion,
 )
-plt.show()
