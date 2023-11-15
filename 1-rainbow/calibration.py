@@ -109,12 +109,12 @@ else:
     ]
 
 # TODO: Enter the correct concentrations for the calibration images
-concentrations = [7, 4.01]  # 4.52, 5, 6.03,7, 8.02]
-assert len(calibration_image) == len(concentrations), "Input not correct."
+ph = [7, 4.01]  # 4.52, 5, 6.03,7, 8.02]
+assert len(calibration_image) == len(ph), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
 all_colours = []
-concentrations_RGB = []
+ph_RGB = []
 for i in range(num_calibration_images):
     # Fetch calibration images
     image = calibration_image[i]
@@ -133,13 +133,13 @@ for i in range(num_calibration_images):
     all_colours.append(unique_colours_RGB)
 
     # Assign concentration values to all samples
-    concentrations_RGB = concentrations_RGB + num_unique_colours * [concentrations[i]]
+    ph_RGB = ph_RGB + num_unique_colours * [ph[i]]
 colours_RGB = np.concatenate(all_colours)
 
 # Collect calibration data
 calibration_config = {
     "colors": colours_RGB,
-    "concentrations": concentrations_RGB,
+    "ph": ph_RGB,
 }
 # Make json compatible
 calibration_config["colors"] = calibration_config["colors"].tolist()
@@ -153,10 +153,10 @@ with open(Path(f"config/calibration_{date}.json"), "w") as output:
 # ! ---- DEFINE CONCENTRATION ANALYSIS ---- !
 
 print(len(colours_RGB), colours_RGB)
-print(len(concentrations_RGB), concentrations_RGB)
+print(len(ph_RGB), ph_RGB)
 
 kernel_interpolation = darsia.KernelInterpolation(
-    darsia.GaussianKernel(gamma=9.73), colours_RGB, concentrations_RGB
+    darsia.GaussianKernel(gamma=9.73), colours_RGB, ph_RGB
 )
 # clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
 # concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
@@ -213,6 +213,7 @@ def comparison_plot(concentration, path, subregion=None):
     plt.savefig(path, dpi=800, transparent=False, bbox_inches="tight")
     # And show on screen
     plt.show()
+
 
 # Compare full images
 if user == "helene":
