@@ -17,12 +17,12 @@ import skimage
 # ! ---- DATA MANAGEMENT ---- !
 
 # Define single baseline image
-baseline_folder = "data/baseline_images"
+baseline_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
 baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
 
 # Define calibration image(s)
-calibration_folder = "data/calibration_images"
-calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0:6] # NOTE: 6 images!
+calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_images"
+calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0:2] # NOTE: 7 images!
 num_calibration_images = len(calibration_path)
 
 # ! ---- CORRECTION MANAGEMENT ---- !
@@ -38,7 +38,7 @@ num_calibration_images = len(calibration_path)
 original_baseline = darsia.imread(baseline_path)
 
 # Read config from json file
-f = open(Path("config/preprocessing_2023-10-18 1500.json"))
+f = open(Path("/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"))
 config = json.load(f)
 
 drift_correction = darsia.DriftCorrection(original_baseline, **config["drift"])
@@ -72,8 +72,8 @@ concentration_analysis = darsia.ConcentrationAnalysis(**concentration_options)
 # One possibility is to use a GUI for interactive use. This option can
 # be activated on demand. For testing purposes this example by default
 # uses a pre-defined sample selection.
-interactive_calibration = False
-point_selection_image = calibration_image[0]
+interactive_calibration = True
+point_selection_image = calibration_image[1]
 if interactive_calibration:
     # Same but under the use of a graphical user interface.
     # Ask user to provide characteristic regions with expected concentration values
@@ -88,25 +88,28 @@ else:
     ]
 
 # TODO: Enter the correct concentrations for the calibration images
-concentrations = []
-assert len(samples) == len(concentrations), "Input not correct."
+concentrations = [7, 4.01] #4.52, 5, 6.03,7, 8.02]
+assert len(calibration_image) == len(concentrations), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
+all_colours =[]
 concentrations_RGB = []
 for i in range(num_calibration_images):
     # Fetch calibration images
     image = calibration_image[i]
 
     # Smooth image
-    smooth_RGB = concentration_analysis(calibration_image.img_as(float)).img
+    smooth_RGB = concentration_analysis(image.img_as(float)).img
 
     # Fetch characteristic colors from samples
     colours_RGB = darsia.extract_characteristic_data(
         signal=smooth_RGB, samples=samples, verbosity=True, surpress_plot=True
     )
+    all_colours.append(colours_RGB)
 
     # Assign concentration values to all samples
-    concentrations_RGB =  concentrations_RGB + len(samples) * concentrations[i]
+    concentrations_RGB =  concentrations_RGB + len(samples) * [concentrations[i]]
+colours_RGB = np.concatenate(all_colours)
 
 # Collect calibration data
 calibration_config = {
@@ -123,6 +126,9 @@ with open(Path(f"config/calibration_{date}.json"), "w") as output:
     json.dump(calibration_config, output)
 
 # ! ---- DEFINE CONCENTRATION ANALYSIS ---- !
+
+print(len(colours_RGB), colours_RGB)
+print(len(concentrations_RGB), concentrations_RGB)
 
 kernel_interpolation = darsia.KernelInterpolation(
     darsia.GaussianKernel(gamma=9.73), colours_RGB, concentrations_RGB
@@ -182,9 +188,10 @@ def comparison_plot(concentration, path, subregion=None):
     # And show on screen
     plt.show()
 
+
 # Compare full images
 comparison_plot(
-    concentration, "results/calibration_rainbow.png"
+    concentration, "/Users/heleneskretting/inf100/darsia-calibration-project/results/calibration_rainbow.png"
 )
 ## Zoom-in comparison
 #subregion = {"coordinates": [[0.3, 0.3], [0.5, 0.6]]}
