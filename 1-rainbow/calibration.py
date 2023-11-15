@@ -16,12 +16,20 @@ import skimage
 
 # ! ---- DATA MANAGEMENT ---- !
 
+user = "helene"
+
 # Define single baseline image
-baseline_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
+if user == "helene":
+    baseline_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
+else:
+    baseline_folder = "data/baseline_images"
 baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
 
 # Define calibration image(s)
-calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_images"
+if user == "helene":
+    calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_images"
+else:
+    calibration_folder = "data/calibration_images"
 calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0:2] # NOTE: 7 images!
 num_calibration_images = len(calibration_path)
 
@@ -38,7 +46,10 @@ num_calibration_images = len(calibration_path)
 original_baseline = darsia.imread(baseline_path)
 
 # Read config from json file
-f = open(Path("/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"))
+if user == "helene":
+    f = open(Path("/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"))
+else:
+    f = open(Path("config/preprocessing_2023-10-18 1500.json"))
 config = json.load(f)
 
 drift_correction = darsia.DriftCorrection(original_baseline, **config["drift"])
@@ -73,7 +84,7 @@ concentration_analysis = darsia.ConcentrationAnalysis(**concentration_options)
 # be activated on demand. For testing purposes this example by default
 # uses a pre-defined sample selection.
 interactive_calibration = True
-point_selection_image = calibration_image[1]
+point_selection_image = calibration_image[-1]
 if interactive_calibration:
     # Same but under the use of a graphical user interface.
     # Ask user to provide characteristic regions with expected concentration values
@@ -105,10 +116,14 @@ for i in range(num_calibration_images):
     colours_RGB = darsia.extract_characteristic_data(
         signal=smooth_RGB, samples=samples, verbosity=True, surpress_plot=True
     )
-    all_colours.append(colours_RGB)
+
+    # Choose unique colors
+    unique_colours_RGB = np.unique(np.round(colours_RGB, decimals=5), axis=0)
+    num_unique_colours = unique_colours_RGB.shape[0]
+    all_colours.append(unique_colours_RGB)
 
     # Assign concentration values to all samples
-    concentrations_RGB =  concentrations_RGB + len(samples) * [concentrations[i]]
+    concentrations_RGB =  concentrations_RGB + num_unique_colours * [concentrations[i]]
 colours_RGB = np.concatenate(all_colours)
 
 # Collect calibration data
@@ -133,9 +148,10 @@ print(len(concentrations_RGB), concentrations_RGB)
 kernel_interpolation = darsia.KernelInterpolation(
     darsia.GaussianKernel(gamma=9.73), colours_RGB, concentrations_RGB
 )
-clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
+#clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
+#concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
+concentration_analysis.model = kernel_interpolation
 concentration_analysis.restoration = restoration
-concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
 
 # ! ---- QUICK TEST ---- !
 
@@ -190,9 +206,14 @@ def comparison_plot(concentration, path, subregion=None):
 
 
 # Compare full images
+if user == "helene":
+    plot_path = "/Users/heleneskretting/inf100/darsia-calibration-project/results/calibration_rainbow.png"
+else:
+    plot_path = "results/rainbow.png"
 comparison_plot(
-    concentration, "/Users/heleneskretting/inf100/darsia-calibration-project/results/calibration_rainbow.png"
+    concentration, plot_path
 )
+
 ## Zoom-in comparison
 #subregion = {"coordinates": [[0.3, 0.3], [0.5, 0.6]]}
 #comparison_plot(
