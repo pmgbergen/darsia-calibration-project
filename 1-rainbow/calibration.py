@@ -20,7 +20,9 @@ user = "helene"
 
 # Define single baseline image
 if user == "helene":
-    baseline_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
+    baseline_folder = (
+        "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
+    )
 else:
     baseline_folder = "data/baseline_images"
 baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
@@ -30,7 +32,9 @@ if user == "helene":
     calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_images"
 else:
     calibration_folder = "data/calibration_images"
-calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0:2] # NOTE: 7 images!
+calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[
+    0:2
+]  # NOTE: 7 images!
 num_calibration_images = len(calibration_path)
 
 # ! ---- CORRECTION MANAGEMENT ---- !
@@ -47,7 +51,11 @@ original_baseline = darsia.imread(baseline_path)
 
 # Read config from json file
 if user == "helene":
-    f = open(Path("/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"))
+    f = open(
+        Path(
+            "/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"
+        )
+    )
 else:
     f = open(Path("config/preprocessing_2023-10-18 1500.json"))
 config = json.load(f)
@@ -62,7 +70,9 @@ corrections = [drift_correction, color_correction, curvature_correction]
 baseline_image = darsia.imread(baseline_path, transformations=corrections)
 calibration_image = []
 for i in range(num_calibration_images):
-    calibration_image.append(darsia.imread(calibration_path[i], transformations=corrections))
+    calibration_image.append(
+        darsia.imread(calibration_path[i], transformations=corrections)
+    )
 
 # ! ---- CONCENTRATION CALIBRATION ---- !
 
@@ -99,11 +109,11 @@ else:
     ]
 
 # TODO: Enter the correct concentrations for the calibration images
-concentrations = [7, 4.01] #4.52, 5, 6.03,7, 8.02]
+concentrations = [7, 4.01]  # 4.52, 5, 6.03,7, 8.02]
 assert len(calibration_image) == len(concentrations), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
-all_colours =[]
+all_colours = []
 concentrations_RGB = []
 for i in range(num_calibration_images):
     # Fetch calibration images
@@ -123,7 +133,7 @@ for i in range(num_calibration_images):
     all_colours.append(unique_colours_RGB)
 
     # Assign concentration values to all samples
-    concentrations_RGB =  concentrations_RGB + num_unique_colours * [concentrations[i]]
+    concentrations_RGB = concentrations_RGB + num_unique_colours * [concentrations[i]]
 colours_RGB = np.concatenate(all_colours)
 
 # Collect calibration data
@@ -148,8 +158,8 @@ print(len(concentrations_RGB), concentrations_RGB)
 kernel_interpolation = darsia.KernelInterpolation(
     darsia.GaussianKernel(gamma=9.73), colours_RGB, concentrations_RGB
 )
-#clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
-#concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
+# clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
+# concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
 concentration_analysis.model = kernel_interpolation
 concentration_analysis.restoration = restoration
 
@@ -188,12 +198,12 @@ def comparison_plot(concentration, path, subregion=None):
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax = plt.subplot(212)
-    im_aq = ax.imshow(concentration_img.img, extent=domain, vmin=4, vmax=8.02)
+    im = ax.imshow(concentration_img.img, extent=domain, vmin=4, vmax=8.02)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
-    cb_aq = fig.colorbar(
-        im_aq,
+    cb = fig.colorbar(
+        im,
         cax=cbax,
         orientation="vertical",
         label="pH",
@@ -204,21 +214,9 @@ def comparison_plot(concentration, path, subregion=None):
     # And show on screen
     plt.show()
 
-
 # Compare full images
 if user == "helene":
     plot_path = "/Users/heleneskretting/inf100/darsia-calibration-project/results/calibration_rainbow.png"
 else:
     plot_path = "results/rainbow.png"
-comparison_plot(
-    concentration, plot_path
-)
-
-## Zoom-in comparison
-#subregion = {"coordinates": [[0.3, 0.3], [0.5, 0.6]]}
-#comparison_plot(
-#    co2_aq_concentration,
-#    co2_g_concentration,
-#    "results/calibration_co2_zoom.png",
-#    subregion,
-#)
+comparison_plot(concentration, plot_path)
