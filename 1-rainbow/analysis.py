@@ -93,14 +93,16 @@ analysis = darsia.ConcentrationAnalysis(model=model, **concentration_options)
 # ! ---- VIZUALIZATION
 
 
-def comparison_plot(image, concentration, path, subregion=None):
+def comparison_plot(image, concentration, density, path, subregion=None):
     # Extract subregion
     if subregion is not None:
         c_img = image.subregion(**subregion)
         concentration_img = concentration.subregion(**subregion)
+        density_img = density.subregion(**subregion)
     else:
         c_img = image.copy()
         concentration_img = concentration.copy()
+        density_img = density.copy()
 
     # Detect physical domain
     domain = concentration_img.domain
@@ -109,11 +111,11 @@ def comparison_plot(image, concentration, path, subregion=None):
     # USe figsize maximized window
     fig = plt.figure(figsize=(37, 15))
     fig.suptitle("Original image and resulting pH values")
-    ax = plt.subplot(211)
+    ax = plt.subplot(311)
     ax.imshow(skimage.img_as_ubyte(c_img.img), extent=domain)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax = plt.subplot(212)
+    ax = plt.subplot(312)
     im = ax.imshow(concentration_img.img, extent=domain, vmin=4, vmax=8.02)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
@@ -123,6 +125,17 @@ def comparison_plot(image, concentration, path, subregion=None):
         cax=cbax,
         orientation="vertical",
         label="pH",
+    )
+    ax = plt.subplot(313)
+    im = ax.imshow(density_img.img, extent=domain, vmin=0, vmax=10)  # TODO
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
+    cb = fig.colorbar(
+        im,
+        cax=cbax,
+        orientation="vertical",
+        label="density (g/m**3)",
     )
 
     # Allow to store plot to file
@@ -140,6 +153,8 @@ else:
 # ! ---- SERIES ANALYSIS ---- !
 
 # Goal: Track ph values over time - NOTE: There is no correlation between ph and concentration
+time = []  # in seconds
+mass = []  # in gramms
 for i, path in enumerate(experiment_path):
 
     # Print info
@@ -153,5 +168,32 @@ for i, path in enumerate(experiment_path):
     # Extract pH
     ph = analysis(image.img_as(float))
 
+    # Convert from pH to density in mol / m**(-3) and g / m**(-3)
+    data_ph = [4, 5, 6, 7, 8]  # TODO
+    data_mM = [0, 1, 3, 5, 33]  # TODO
+    density_mM = ph.copy()
+    density_mM.img = np.interp(ph.img, data_ph, data_mM)
+    density_CO2 = 44.01  # g / mol # TODO
+    density_g = density_mM.copy()
+    density_g.img *= density_CO2
+
+    # Compute total mass in g over time
+    shape_metadata = image.shape_metadata()
+    porosity = 0.44  # [-]
+    depth = 0.02  # m
+    geometry = darsia.ExtrudedPorousGeometry(
+        porosity=porosity, depth=depth, **shape_metadata
+    )
+    mass_co2 = geometry.integrate(density_g)
+
+    # Store informations
+    time.append(image.time)
+    mass.append(mass_co2)
+
+    print(f"Time: {time}")
+    print(f"Mass: {mass}")
+
     # Store image to file.
-    comparison_plot(image, ph, plot_path + "/" + "ph_" + str(path.stem) + ".png")
+    comparison_plot(
+        image, ph, density_g, plot_path + "/" + "ph_" + str(path.stem) + ".png"
+    )
