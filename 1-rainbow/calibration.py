@@ -2,6 +2,15 @@
 
 This file is supposed to be a template for the BSc/DarSIA calibration project.
 
+Images used for calibration:
+    B050/DSC06608.JPG
+    B050/DSC07208.JPG
+    B050/DSC07332.JPG
+    B050/DSC07461.JPG
+    B050/DSC07587.JPG
+    B050/DSC07709.JPG
+    B050/DSC07833.JPG
+
 """
 # ! ---- IMPORTS ---- !
 
