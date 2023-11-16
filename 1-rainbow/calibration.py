@@ -42,8 +42,8 @@ if user == "helene":
 else:
     calibration_folder = "data/calibration_images"
 calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[
-    0:2
-]  # NOTE: 7 images!
+    0:7
+]
 num_calibration_images = len(calibration_path)
 
 # ! ---- CORRECTION MANAGEMENT ---- !
@@ -110,15 +110,10 @@ if interactive_calibration:
     assistant = darsia.BoxSelectionAssistant(point_selection_image)
     samples = assistant()
 else:
-    # NOTE Wrong points!
-    samples = [
-        (slice(2150, 2250, None), slice(4841, 4941, None)),
-        (slice(2459, 2559, None), slice(4075, 4175, None)),
-        (slice(971, 1071, None), slice(4399, 4499, None)),
-    ]
+    samples = None
 
-# TODO: Enter the correct concentrations for the calibration images
-ph = [7, 4.01]  # 4.52, 5, 6.03,7, 8.02]
+# The correct concentrations for the calibration images
+ph = [7, 4.01, 4.52, 5, 6.03, 7, 8.02]
 assert len(calibration_image) == len(ph), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
