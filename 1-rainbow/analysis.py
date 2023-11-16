@@ -169,8 +169,8 @@ for i, path in enumerate(experiment_path):
     ph = analysis(image.img_as(float))
 
     # Convert from pH to density in mol / m**(-3) and g / m**(-3)
-    data_ph = [4, 5, 6, 7, 8]  # TODO
-    data_mM = [0, 1, 3, 5, 33]  # TODO
+    data_ph = [4, 5, 6, 7, 8]
+    data_mM = [33, 4.3, 1.4, 1.0, 0.0]
     density_mM = ph.copy()
     density_mM.img = np.interp(ph.img, data_ph, data_mM)
     density_CO2 = 44.01  # g / mol # TODO
