@@ -12,6 +12,7 @@ from pathlib import Path
 import darsia
 import matplotlib.pyplot as plt
 import skimage
+import numpy as np
 
 # ! ---- DATA MANAGEMENT ---- !
 
@@ -36,7 +37,7 @@ calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0]
 original_baseline = darsia.imread(baseline_path)
 
 # Read config from json file
-f = open(Path("config/preprocessing_2023-10-23 1918.json"))
+f = open(Path("config/preprocessing_2023-10-24_1143.json"))
 config = json.load(f)
 
 drift_correction = darsia.DriftCorrection(original_baseline, **config["drift"])
@@ -69,11 +70,11 @@ co2_g_analysis = darsia.ConcentrationAnalysis(**concentration_options)
 # One possibility is to use a GUI for interactive use. This option can
 # be activated on demand. For testing purposes this example by default
 # uses a pre-defined sample selection.
-interactive_calibration = False
+interactive_calibration = True
 if interactive_calibration:
     # Same but under the use of a graphical user interface.
     # Ask user to provide characteristic regions with expected concentration values
-    assistant = darsia.BoxSelectionAssistant(calibration_image)
+    assistant = darsia.BoxSelectionAssistant(calibration_image, width=100)
     samples = assistant()
     concentrations_co2_aq = [
         float(x)
@@ -153,5 +154,5 @@ plt.show()
 
 # Store solution to file
 Path("results_ingvild").mkdir(exist_ok=True)
-np.save(Path("results_ingvild/concentration_co2_g.npy", co2_g_concentration_image)
-np.save(Path("results_ingvild/concentration_co2_aq.npy", co2_aq_concentration_image)
+np.save(Path("results_ingvild/concentration_co2_g.npy"), co2_g_concentration_image)
+np.save(Path("results_ingvild/concentration_co2_aq.npy"), co2_aq_concentration_image)

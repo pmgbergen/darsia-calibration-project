@@ -13,11 +13,14 @@ import skimage
 
 # ! ---- DATA MANAGEMENT ---- !
 
-user = None  # "helene"
+user = "ingvild"  # "helene"
 
 # Define single baseline image
 if user == "helene":
     baseline_folder = None  # TODO
+elif user == "ingvild":
+    baseline_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\co2_images"  # TODO
+
 else:
     baseline_folder = "data/baseline_images"
 baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
@@ -25,9 +28,11 @@ baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
 # Define experiment images
 if user == "helene":
     experiment_folder = None  # TODO
+if user == "ingvild":
+    experiment_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\co2_images"  # TODO
 else:
     experiment_folder = "data/experiment_images"
-experiment_path = list(sorted(Path(experiment_folder).glob("*.JPG")))  # [5:10]
+experiment_path = list(sorted(Path(experiment_folder).glob("*.JPG")))[6:7]
 
 # ! ---- CORRECTION MANAGEMENT ---- !
 
@@ -46,6 +51,12 @@ if user == "helene":
     f = open(
         Path(
             "/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"
+        )
+    )
+elif user == "ingvild":
+    f = open(
+        Path(
+            r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\preprocessing_2023-11-16_1505_02.json"
         )
     )
 else:
@@ -73,7 +84,7 @@ concentration_options = {
 }
 
 # Read config from json file and make compatible with kernel interpolation
-calibration_path = Path("config/calibration_2023-11-15 1435.json")  # TODO
+calibration_path = Path(r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\calibration_2023-11-16_1418_01.json")  # TODO
 f = open(calibration_path)
 calibration = json.load(f)
 calibration["colors"] = np.array(calibration["colors"])
@@ -147,6 +158,8 @@ def comparison_plot(image, concentration, density, path, subregion=None):
 # Compare full images
 if user == "helene":
     plot_path = "/Users/heleneskretting/inf100/darsia-calibration-project/results"
+elif user == "ingvild":
+    plot_path = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\results"
 else:
     plot_path = "results"
 

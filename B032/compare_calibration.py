@@ -1,6 +1,9 @@
 import numpy as np
 from pathlib import Path
 import darsia
+import matplotlib.pyplot as plt
+import skimage
+import json
 
 # ! ---- DATA MANAGEMENT ---- !
 
@@ -25,7 +28,7 @@ calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0]
 original_baseline = darsia.imread(baseline_path)
 
 # Read config from json file
-f = open(Path("config/preprocessing_2023-10-23 1918.json"))
+f = open(Path("config\preprocessing_2023-10-24_1143.json"))
 config = json.load(f)
 
 drift_correction = darsia.DriftCorrection(original_baseline, **config["drift"])
@@ -38,17 +41,17 @@ corrections = [drift_correction, color_correction, curvature_correction]
 baseline_image = darsia.imread(baseline_path, transformations=corrections)
 calibration_image = darsia.imread(calibration_path, transformations=corrections)
 
-# Ingvild data
-co2_g_ingvild = np.load(Path("results_ingvild/concentration_co2_g.npy"))
-co2_aq_ingvild = np.load(Path("results_ingvild/concentration_co2_aq.npy"))
+# First calibration data
+co2_g_01 = np.load(Path("results_ingvild\concentration_co2_g_01.npy"))
+co2_aq_01 = np.load(Path("results_ingvild\concentration_co2_aq_01.npy"))
 
-# Helene data
-co2_g_helene = np.load(Path("results_helene/concentration_co2_g.npy"))
-co2_aq_helene = np.load(Path("results_helene/concentration_co2_aq.npy"))
+# Second calibration data
+co2_g_02 = np.load(Path("results_ingvild\concentration_co2_g_02.npy"))
+co2_aq_02 = np.load(Path("results_ingvild\concentration_co2_aq_02.npy"))
 
 # Difference of concentrations
-co2_g_diff = co2_g_ingvild - co2_g_helene
-co2_aq_diff = co2_aq_ingvild - co2_aq_helene
+co2_g_diff = co2_g_01 - co2_g_02
+co2_aq_diff = co2_aq_01 - co2_aq_02
 
 # Visual comparison
 fig = plt.figure()

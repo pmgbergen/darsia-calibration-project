@@ -25,12 +25,16 @@ import skimage
 
 # ! ---- DATA MANAGEMENT ---- !
 
-user = "helene"
+user = "ingvild"
 
 # Define single baseline image
 if user == "helene":
     baseline_folder = (
-        "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image"
+        "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image" 
+    )
+elif user == "ingvild":
+    baseline_folder = (
+        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\rainbow_images"
     )
 else:
     baseline_folder = "data/baseline_images"
@@ -38,12 +42,15 @@ baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
 
 # Define calibration image(s)
 if user == "helene":
-    calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_images"
+    calibration_folder = "/Users/heleneskretting/inf100/darsia-calibration-project/B050/calibration_image"
+elif user == "ingvild":
+    calibration_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\rainbow_images"
 else:
     calibration_folder = "data/calibration_images"
 calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[
     0:7
 ]
+
 num_calibration_images = len(calibration_path)
 
 # ! ---- CORRECTION MANAGEMENT ---- !
@@ -63,6 +70,12 @@ if user == "helene":
     f = open(
         Path(
             "/Users/heleneskretting/inf100/darsia-calibration-project/B032/config/preprocessing_2023-10-24_1143.json"
+        )
+    )
+elif user == "ingvild":
+    f = open(
+        Path(
+            r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\B033\config\preprocessing_2023-10-24_1306.json"
         )
     )
 else:
@@ -107,13 +120,14 @@ point_selection_image = calibration_image[-1]
 if interactive_calibration:
     # Same but under the use of a graphical user interface.
     # Ask user to provide characteristic regions with expected concentration values
-    assistant = darsia.BoxSelectionAssistant(point_selection_image)
+    assistant = darsia.BoxSelectionAssistant(point_selection_image, width=100)
     samples = assistant()
 else:
     samples = None
 
-# The correct concentrations for the calibration images
-ph = [7, 4.01, 4.52, 5, 6.03, 7, 8.02]
+
+# TODO: Enter the correct concentrations for the calibration images
+ph = [10, 4.01,  4.52, 5, 6.03,7, 8.02]
 assert len(calibration_image) == len(ph), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
@@ -202,7 +216,7 @@ def comparison_plot(concentration, path, subregion=None):
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax = plt.subplot(212)
-    im = ax.imshow(concentration_img.img, extent=domain, vmin=4, vmax=8.02)
+    im = ax.imshow(concentration_img.img, extent=domain, vmin=3, vmax=11)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
