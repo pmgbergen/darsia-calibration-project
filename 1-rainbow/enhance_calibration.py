@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import skimage
 
+from colormap import ph_indicator_cmap
+
 # ! ---- DATA MANAGEMENT ---- !
 
 user = None  # "ingvild"
@@ -156,7 +158,14 @@ kernel_interpolation = darsia.KernelInterpolation(
     calibration["colors"],
     calibration["ph"],
 )
-concentration_analysis.model = kernel_interpolation
+use_clip = False
+if use_clip:
+    clip = darsia.ClipModel(
+        **{"min value": 4, "max value": 10}
+    )  # Cut outside the range of provided data
+    concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
+else:
+    concentration_analysis.model = kernel_interpolation
 concentration_analysis.restoration = restoration
 
 # ! ---- QUICK TEST ---- !
@@ -194,7 +203,8 @@ def comparison_plot(concentration, path, subregion=None):
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax = plt.subplot(212)
-    im = ax.imshow(concentration_img.img, extent=domain, vmin=3, vmax=11)
+    cmap = ph_indicator_cmap()
+    im = ax.imshow(concentration_img.img, extent=domain, cmap=cmap, vmin=0, vmax=14)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)

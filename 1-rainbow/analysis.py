@@ -11,19 +11,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import skimage
 
+from colormap import ph_indicator_cmap
+
 # ! ---- DATA MANAGEMENT ---- !
 
-user = "ingvild"  # "helene"
-
-# Define single baseline image
-if user == "helene":
-    baseline_folder = None  # TODO
-elif user == "ingvild":
-    baseline_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\co2_images"  # TODO
-
-else:
-    baseline_folder = "data/baseline_images"
-baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
+user = None  # "ingvild"  # "helene"
 
 # Define experiment images
 if user == "helene":
@@ -31,9 +23,11 @@ if user == "helene":
 if user == "ingvild":
     experiment_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\co2_images"  # TODO
 else:
-    experiment_folder = "data/experiment_images"
+    experiment_folder = "data/co2_images"
 experiment_path = list(sorted(Path(experiment_folder).glob("*.JPG")))[6:7]
 
+# Define single baseline image
+baseline_path = list(sorted(Path(experiment_folder).glob("*.JPG")))[0]
 # ! ---- CORRECTION MANAGEMENT ---- !
 
 # Idea: Apply three corrections:
@@ -84,7 +78,14 @@ concentration_options = {
 }
 
 # Read config from json file and make compatible with kernel interpolation
-calibration_path = Path(r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\calibration_2023-11-16_1418_01.json")  # TODO
+if user == "helene":
+    assert False, "no calibration file provided"
+elif user == "ingvild":
+    calibration_path = Path(
+        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\calibration_2023-11-16_1418_01.json"
+    )  # TODO
+else:
+    calibration_path = Path("config/augmented_calibration_2023-11-17 1934.json")
 f = open(calibration_path)
 calibration = json.load(f)
 calibration["colors"] = np.array(calibration["colors"])
@@ -95,8 +96,14 @@ kernel_interpolation = darsia.KernelInterpolation(
     calibration["colors"],
     calibration["ph"],
 )
-# clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
-model = kernel_interpolation
+use_clip = True
+if use_clip:
+    clip = darsia.ClipModel(
+        **{"min value": 4, "max value": 10}
+    )  # Cut outside the range of provided data
+    model = darsia.CombinedModel([kernel_interpolation, clip])
+else:
+    model = kernel_interpolation
 
 # Define concentration analysis for now without any model (to be defined later).
 analysis = darsia.ConcentrationAnalysis(model=model, **concentration_options)
@@ -122,12 +129,13 @@ def comparison_plot(image, concentration, density, path, subregion=None):
     # USe figsize maximized window
     fig = plt.figure(figsize=(37, 15))
     fig.suptitle("Original image and resulting pH values")
-    ax = plt.subplot(311)
+    ax = plt.subplot(211)
     ax.imshow(skimage.img_as_ubyte(c_img.img), extent=domain)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
-    ax = plt.subplot(312)
-    im = ax.imshow(concentration_img.img, extent=domain, vmin=4, vmax=8.02)
+    ax = plt.subplot(212)
+    cmap = ph_indicator_cmap()
+    im = ax.imshow(concentration_img.img, extent=domain, cmap=cmap, vmin=0, vmax=14)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
@@ -137,17 +145,17 @@ def comparison_plot(image, concentration, density, path, subregion=None):
         orientation="vertical",
         label="pH",
     )
-    ax = plt.subplot(313)
-    im = ax.imshow(density_img.img, extent=domain, vmin=0, vmax=10)  # TODO
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("y [m]")
-    cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
-    cb = fig.colorbar(
-        im,
-        cax=cbax,
-        orientation="vertical",
-        label="density (g/m**3)",
-    )
+    # ax = plt.subplot(313)
+    # im = ax.imshow(density_img.img, extent=domain, vmin=0, vmax=10)  # TODO
+    # ax.set_xlabel("x [m]")
+    # ax.set_ylabel("y [m]")
+    # cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
+    # cb = fig.colorbar(
+    #    im,
+    #    cax=cbax,
+    #    orientation="vertical",
+    #    label="density (g/m**3)",
+    # )
 
     # Allow to store plot to file
     plt.savefig(path, dpi=800, transparent=False, bbox_inches="tight")
@@ -159,9 +167,11 @@ def comparison_plot(image, concentration, density, path, subregion=None):
 if user == "helene":
     plot_path = "/Users/heleneskretting/inf100/darsia-calibration-project/results"
 elif user == "ingvild":
-    plot_path = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\results"
+    plot_path = (
+        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\results"
+    )
 else:
-    plot_path = "results"
+    plot_path = "results/co2"
 
 # ! ---- SERIES ANALYSIS ---- !
 

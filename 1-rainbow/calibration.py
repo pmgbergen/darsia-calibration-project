@@ -23,22 +23,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import skimage
 
+from colormap import ph_indicator_cmap
+
 # ! ---- DATA MANAGEMENT ---- !
 
-user = "ingvild"
-
-# Define single baseline image
-if user == "helene":
-    baseline_folder = (
-        "/Users/heleneskretting/inf100/darsia-calibration-project/B050/baseline_image" 
-    )
-elif user == "ingvild":
-    baseline_folder = (
-        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\rainbow_images"
-    )
-else:
-    baseline_folder = "data/baseline_images"
-baseline_path = list(sorted(Path(baseline_folder).glob("*.JPG")))[0]
+user = None  # "ingvild"
 
 # Define calibration image(s)
 if user == "helene":
@@ -47,11 +36,11 @@ elif user == "ingvild":
     calibration_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\rainbow_images"
 else:
     calibration_folder = "data/calibration_images"
-calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[
-    0:7
-]
-
+calibration_path = list(sorted(Path(calibration_folder).glob("*.JPG")))[0:7]
 num_calibration_images = len(calibration_path)
+
+# Define single baseline image
+baseline_path = calibration_path[0]
 
 # ! ---- CORRECTION MANAGEMENT ---- !
 
@@ -125,9 +114,8 @@ if interactive_calibration:
 else:
     samples = None
 
-
 # TODO: Enter the correct concentrations for the calibration images
-ph = [10, 4.01,  4.52, 5, 6.03,7, 8.02]
+ph = [10, 4.01, 4.52, 5, 6.03, 7, 8.02]
 assert len(calibration_image) == len(ph), "Input not correct."
 
 # Now add kernel interpolation as model trained by the extracted information.
@@ -152,6 +140,7 @@ for i in range(num_calibration_images):
 
     # Assign concentration values to all samples
     ph_RGB = ph_RGB + num_unique_colours * [ph[i]]
+
 colours_RGB = np.concatenate(all_colours)
 
 # Collect calibration data
@@ -170,15 +159,17 @@ with open(Path(f"config/calibration_{date}.json"), "w") as output:
 
 # ! ---- DEFINE CONCENTRATION ANALYSIS ---- !
 
-print(len(colours_RGB), colours_RGB)
-print(len(ph_RGB), ph_RGB)
-
 kernel_interpolation = darsia.KernelInterpolation(
     darsia.GaussianKernel(gamma=9.73), colours_RGB, ph_RGB
 )
-# clip = darsia.ClipModel(**{"min value": 0, "max value": 1})
-# concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
-concentration_analysis.model = kernel_interpolation
+use_clip = False
+if use_clip:
+    clip = darsia.ClipModel(
+        **{"min value": 4, "max value": 10}
+    )  # Cut outside the range of provided data
+    concentration_analysis.model = darsia.CombinedModel([kernel_interpolation, clip])
+else:
+    concentration_analysis.model = kernel_interpolation
 concentration_analysis.restoration = restoration
 
 # ! ---- QUICK TEST ---- !
@@ -216,7 +207,8 @@ def comparison_plot(concentration, path, subregion=None):
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     ax = plt.subplot(212)
-    im = ax.imshow(concentration_img.img, extent=domain, vmin=3, vmax=11)
+    cmap = ph_indicator_cmap()
+    im = ax.imshow(concentration_img.img, extent=domain, cmap=cmap, vmin=0, vmax=14)
     ax.set_xlabel("x [m]")
     ax.set_ylabel("y [m]")
     cbax = ax.inset_axes([1.1, 0, 0.06, 1], transform=ax.transAxes)
