@@ -2,6 +2,12 @@
 
 This file is supposed to be a template for the BSc/DarSIA calibration project.
 
+Calibration images used:
+Folder: \\klient.uib.no\FELLES\LAB-IT\IFT\resfys\FluidFlower\FF AB original data\Bilbo 030-on VTC chemistry series\B032 CO2 BTB 0.14 mM\230510_203400_B032_injection_15s
+
+DSC46907.JPG
+DSC47341.JPG
+
 """
 # ! ---- IMPORTS ---- !
 
