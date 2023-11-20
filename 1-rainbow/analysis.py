@@ -1,5 +1,11 @@
 """Application of calibrated pH analysis.
 
+CO2 images used:
+Folder: \\klient.uib.no\FELLES\LAB-IT\IFT\resfys\FluidFlower\FF AB original data\Bilbo 030-on VTC chemistry series\B049\B049\231031_103500_B049_injections_15s
+
+DSC12603.JPG
+DSC12750.JPG
+
 """
 # ! ---- IMPORTS ---- !
 
@@ -15,12 +21,12 @@ from colormap import ph_indicator_cmap
 
 # ! ---- DATA MANAGEMENT ---- !
 
-user = None  # "ingvild"  # "helene"
+user = "ingvild"  # "ingvild"  # "helene"
 
 # Define experiment images
 if user == "helene":
     experiment_folder = None  # TODO
-if user == "ingvild":
+elif user == "ingvild":
     experiment_folder = r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\co2_images"  # TODO
 else:
     experiment_folder = "data/co2_images"
@@ -82,7 +88,7 @@ if user == "helene":
     assert False, "no calibration file provided"
 elif user == "ingvild":
     calibration_path = Path(
-        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\calibration_2023-11-16_1418_01.json"
+        r"C:\Users\Bruker\Documents\GitHub\darsia-calibration-project\1-rainbow\config\augmented_calibration_2023-11-18_1232_07.json"
     )  # TODO
 else:
     calibration_path = Path("config/augmented_calibration_2023-11-17 1934.json")
