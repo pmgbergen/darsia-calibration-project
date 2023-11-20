@@ -3,7 +3,7 @@
 This file is supposed to be a template for the BSc/DarSIA calibration project.
 
 Baseline image:
-Folder: \\klient.uib.no\FELLES\LAB-IT\IFT\resfys\FluidFlower\FF AB original data\Bilbo 030-on VTC chemistry series\B033 CO2 BTB 0.75 mM
+Folder: \\klient.uib.no\FELLES\LAB-IT\IFT\resfys\FluidFlower\FF AB original data\Bilbo 030-on VTC chemistry series\B033 CO2 BTB 0.75 mM\230522_175500_B033_CO2_injection_15s
 
 DSC46000.JPG
 
